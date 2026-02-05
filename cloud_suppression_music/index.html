@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>悦听音乐</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        ul, dl, dd {
+            list-style: none;
+        }
+
+        .wrap {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        }
+
+        .play_wrap {
+            width: 850px;
+            height: 560px;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .search_bar {
+            height: 65px;
+            background: linear-gradient(90deg, #e94560 0%, #0f3460 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 25px;
+        }
+
+        .search_bar .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            letter-spacing: 2px;
+        }
+
+        .search_bar input {
+            width: 280px;
+            height: 38px;
+            border-radius: 19px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            text-indent: 18px;
+            outline: none;
+            color: #fff;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .search_bar input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .search_bar input:focus {
+            background: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 15px rgba(233, 69, 96, 0.5);
+        }
+
+        .center_con {
+            height: 440px;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+        }
+
+        .song_wrapper {
+            width: 220px;
+            height: 440px;
+            padding: 15px;
+            border-right: 1px solid #eee;
+            overflow-y: auto;
+        }
+
+        .song_wrapper::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .song_wrapper::-webkit-scrollbar-thumb {
+            background: #e94560;
+            border-radius: 2px;
+        }
+
+        .song_list li {
+            font-size: 13px;
+            color: #444;
+            line-height: 40px;
+            padding: 0 10px;
+            border-radius: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .song_list li:hover {
+            background: #f5f5f5;
+            color: #e94560;
+        }
+
+        .song_list .active {
+            background: linear-gradient(90deg, #e94560, #ff6b6b);
+            color: #fff !important;
+        }
+
+        .player_con {
+            width: 410px;
+            height: 440px;
+            position: relative;
+            background: linear-gradient(180deg, #f8f9fa 0%, #fff 100%);
+        }
+
+        .disc {
+            position: absolute;
+            left: 78px;
+            top: 65px;
+            z-index: 9;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2));
+        }
+
+        .cover {
+            position: absolute;
+            left: 130px;
+            top: 117px;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            z-index: 8;
+            object-fit: cover;
+        }
+
+        .comment_list {
+            width: 220px;
+            height: 440px;
+            padding: 15px;
+            border-left: 1px solid #eee;
+            overflow-y: auto;
+        }
+
+        .comment_list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .comment_list::-webkit-scrollbar-thumb {
+            background: #e94560;
+            border-radius: 2px;
+        }
+
+        .comment_list dl {
+            padding-left: 50px;
+            position: relative;
+            margin-bottom: 18px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .comment_list dt {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        .comment_list dt img {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .comment_list dd {
+            font-size: 12px;
+        }
+
+        .comment_list .name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        .comment_list .detail {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .audio_con {
+            height: 55px;
+            background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .myaudio {
+            width: 100%;
+            height: 40px;
+            outline: none;
+        }
+
+        audio::-webkit-media-controls-panel {
+            background: transparent;
+        }
+
+        @keyframes Rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .autoRotate {
+            animation: Rotate 8s linear infinite paused;
+        }
+
+        .playing {
+            animation-play-state: running;
+        }
+
+        .play_bar {
+            position: absolute;
+            left: 205px;
+            top: -10px;
+            z-index: 10;
+            transform: rotate(-25deg);
+            transform-origin: 12px 12px;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.2));
+        }
+
+        .play_bar.playing {
+            transform: rotate(0deg);
+        }
+
+        .placeholder-text {
+            color: #999;
+            text-align: center;
+            padding-top: 180px;
+            font-size: 13px;
+        }
+
+        .loading-text {
+            color: #e94560;
+        }
+
+        /* 移动端适配 */
+        @media screen and (max-width: 900px) {
+            .play_wrap {
+                width: 95%;
+                height: auto;
+                max-height: 95vh;
+                overflow-y: auto;
+            }
+
+            .center_con {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .song_wrapper {
+                width: 100%;
+                height: 200px;
+                border-right: none;
+                border-bottom: 1px solid #eee;
+            }
+
+            .song_list li {
+                width: 100%;
+            }
+
+            .player_con {
+                width: 100%;
+                height: 320px;
+            }
+
+            .disc {
+                left: 50%;
+                transform: translateX(-50%);
+                margin-left: -127px;
+            }
+
+            .cover {
+                left: 50%;
+                margin-left: -75px;
+            }
+
+            .play_bar {
+                left: 50%;
+                margin-left: 72px;
+            }
+
+            .comment_list {
+                width: 100%;
+                height: 200px;
+                border-left: none;
+                border-top: 1px solid #eee;
+            }
+
+            .placeholder-text {
+                padding-top: 80px !important;
+            }
+        }
+
+        @media screen and (max-width: 500px) {
+            .search_bar {
+                padding: 0 15px;
+                height: 55px;
+            }
+
+            .search_bar .logo {
+                font-size: 20px;
+            }
+
+            .search_bar input {
+                width: 180px;
+                height: 34px;
+                font-size: 13px;
+            }
+
+            .song_wrapper, .comment_list {
+                padding: 10px;
+                height: 180px;
+            }
+
+            .song_list li {
+                line-height: 36px;
+                font-size: 12px;
+            }
+
+            .player_con {
+                height: 280px;
+            }
+
+            .disc {
+                top: 45px;
+                transform: translateX(-50%) scale(0.85);
+            }
+
+            .cover {
+                top: 97px;
+                width: 130px;
+                height: 130px;
+                margin-left: -65px;
+            }
+
+            .play_bar {
+                top: -15px;
+                transform: rotate(-25deg) scale(0.85);
+                margin-left: 60px;
+            }
+
+            .play_bar.playing {
+                transform: rotate(0deg) scale(0.85);
+            }
+
+            .comment_list dl {
+                padding-left: 45px;
+                margin-bottom: 12px;
+                padding-bottom: 12px;
+            }
+
+            .comment_list dt img {
+                width: 32px;
+                height: 32px;
+            }
+
+            .comment_list .detail {
+                font-size: 11px;
+            }
+
+            .audio_con {
+                height: 50px;
+            }
+
+            .myaudio {
+                height: 35px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="play_wrap">
+            <div class="search_bar">
+                <div class="logo">悦听</div>
+                <input type="text" id="searchInput" placeholder="搜索歌曲、歌手..." />
+            </div>
+            <div class="center_con">
+                <div class="song_wrapper">
+                    <ul class="song_list" id="songList">
+                        <li class="placeholder-text" style="padding-top: 160px;">输入歌曲名搜索</li>
+                    </ul>
+                </div>
+                <div class="player_con">
+                    <img src="./images/player_bar.png" class="play_bar" id="playBar" />
+                    <img src="./images/disc.png" class="disc autoRotate" id="disc" />
+                    <img src="./images/cover.png" class="cover autoRotate" id="cover" />
+                </div>
+                <div class="comment_list" id="commentList">
+                    <div class="placeholder-text">选择歌曲查看热评</div>
+                </div>
+            </div>
+            <div class="audio_con">
+                <audio controls loop class="myaudio" id="audio"></audio>
+            </div>
+        </div>
+    </div>
+
+    <script src="./lib/jquery-1.12.4.js"></script>
+    <script>
+        const API_BASE = 'https://api-enhanced-utik.onrender.com';
+        let songData = [];
+        let currentIndex = -1;
+
+        // 搜索歌曲
+        function searchMusic(keywords) {
+            if (!keywords.trim()) return;
+            $('#songList').html('<li class="placeholder-text loading-text" style="padding-top: 160px;">搜索中...</li>');
+            
+            $.ajax({
+                url: API_BASE + '/search',
+                data: { keywords: keywords, limit: 50 },
+                success: function(res) {
+                    if (res.code === 200 && res.result && res.result.songs) {
+                        // 过滤掉 VIP 歌曲 (fee=1)，只保留免费歌曲
+                        songData = res.result.songs.filter(song => song.fee !== 1);
+                        if (songData.length > 0) {
+                            renderSongList(songData);
+                        } else {
+                            $('#songList').html('<li class="placeholder-text" style="padding-top: 160px;">未找到可播放的歌曲</li>');
+                        }
+                    } else {
+                        $('#songList').html('<li class="placeholder-text" style="padding-top: 160px;">未找到相关歌曲</li>');
+                    }
+                },
+                error: function() {
+                    $('#songList').html('<li class="placeholder-text" style="padding-top: 160px; color: #e94560;">搜索失败，请重试</li>');
+                }
+            });
+        }
+
+        // 渲染歌曲列表
+        function renderSongList(songs) {
+            let html = songs.map((song, i) => {
+                const artists = song.artists.map(a => a.name).join('/');
+                return `<li data-id="${song.id}" data-index="${i}">${song.name} - ${artists}</li>`;
+            }).join('');
+            $('#songList').html(html);
+        }
+
+        // 播放歌曲
+        function playSong(songId, index) {
+            currentIndex = index !== undefined ? index : currentIndex;
+            
+            $.ajax({
+                url: API_BASE + '/song/url/v1',
+                data: { id: songId, level: 'standard' },
+                success: function(res) {
+                    if (res.code === 200 && res.data?.[0]?.url) {
+                        playAudio(res.data[0].url);
+                    } else {
+                        // 尝试备用链接
+                        tryBackupUrl(songId);
+                    }
+                },
+                error: function() {
+                    tryBackupUrl(songId);
+                }
+            });
+
+            // 获取封面
+            $.ajax({
+                url: API_BASE + '/song/detail',
+                data: { ids: songId },
+                success: function(res) {
+                    if (res.code === 200 && res.songs?.[0]) {
+                        $('#cover').attr('src', res.songs[0].al.picUrl);
+                    }
+                }
+            });
+
+            getComments(songId);
+        }
+
+        // 播放音频
+        function playAudio(url) {
+            $('#audio').attr('src', url);
+            $('#audio')[0].play().catch(function() {
+                // 播放失败，尝试下一首
+                playNextSong();
+            });
+        }
+
+        // 尝试备用链接
+        function tryBackupUrl(songId) {
+            const backupUrl = `https://music.163.com/song/media/outer/url?id=${songId}.mp3`;
+            $('#audio').attr('src', backupUrl);
+            
+            // 监听是否能播放
+            $('#audio')[0].play().then(function() {
+                // 播放成功
+            }).catch(function() {
+                // 备用链接也失败，自动播放下一首
+                playNextSong();
+            });
+        }
+
+        // 自动播放下一首
+        function playNextSong() {
+            if (songData.length === 0) return;
+            
+            currentIndex++;
+            if (currentIndex >= songData.length) {
+                currentIndex = 0; // 循环到第一首
+            }
+            
+            // 更新列表高亮
+            $('#songList li').removeClass('active');
+            $(`#songList li[data-index="${currentIndex}"]`).addClass('active');
+            
+            // 播放下一首
+            const nextSong = songData[currentIndex];
+            if (nextSong) {
+                playSong(nextSong.id, currentIndex);
+            }
+        }
+
+        // 获取评论
+        function getComments(songId) {
+            $('#commentList').html('<div class="placeholder-text loading-text">加载评论中...</div>');
+            
+            $.ajax({
+                url: API_BASE + '/comment/music',
+                data: { id: songId, limit: 15 },
+                success: function(res) {
+                    if (res.code === 200) {
+                        const comments = res.hotComments?.length ? res.hotComments : res.comments;
+                        renderComments(comments);
+                    }
+                },
+                error: function() {
+                    $('#commentList').html('<div class="placeholder-text">评论加载失败</div>');
+                }
+            });
+        }
+
+        // 渲染评论
+        function renderComments(comments) {
+            if (!comments?.length) {
+                $('#commentList').html('<div class="placeholder-text">暂无热评</div>');
+                return;
+            }
+            
+            const html = comments.map(c => `
+                <dl>
+                    <dt><img src="${c.user.avatarUrl}" alt="" /></dt>
+                    <dd class="name">${c.user.nickname}</dd>
+                    <dd class="detail">${c.content}</dd>
+                </dl>
+            `).join('');
+            $('#commentList').html(html);
+        }
+
+        // 设置播放状态
+        function setPlaying(isPlaying) {
+            const action = isPlaying ? 'addClass' : 'removeClass';
+            $('#playBar, #disc, #cover')[action]('playing');
+        }
+
+        // 事件绑定
+        $(function() {
+            $('#searchInput').on('keyup', function(e) {
+                if (e.keyCode === 13) searchMusic($(this).val());
+            });
+
+            $('#songList').on('click', 'li[data-id]', function() {
+                $('#songList li').removeClass('active');
+                $(this).addClass('active');
+                playSong($(this).data('id'), $(this).data('index'));
+            });
+
+            // 歌曲播放结束，自动下一首
+            $('#audio').on('ended', function() {
+                playNextSong();
+            });
+
+            // 播放出错，自动下一首
+            $('#audio').on('error', function() {
+                playNextSong();
+            });
+
+            $('#audio').on('play', () => setPlaying(true));
+            $('#audio').on('pause', () => setPlaying(false));
+        });
+    </script>
+</body>
+
+</html>
